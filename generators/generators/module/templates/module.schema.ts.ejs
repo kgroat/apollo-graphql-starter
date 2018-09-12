@@ -1,0 +1,74 @@
+
+import { IResolvers } from 'apollo-server'
+import { authorize } from '../../helpers/authorize'
+import gql from '../../helpers/noopTag'
+import { Context } from '../../context'
+import { User } from '../user/user.types'
+import { UserService } from '../user/user.service'
+
+import { <%= capitalName %>Service } from './<%= name %>.service'
+import { <%= capitalName %>PubSub } from './<%= name %>.pubsub'
+import { <%= capitalName %>, Create<%= capitalName %>Request, Update<%= capitalName %>Request } from './<%= name %>.types'
+
+export const typeDefs = gql`
+  extend type Query {
+    <%= name %>s: [<%= capitalName %>!]!
+    <%= name %> (<%= name %>Id: ObjectID!): <%= capitalName %>!
+  }
+
+  extend type Mutation {
+    create<%= capitalName %> (content: String!): <%= capitalName %>!
+    update<%= capitalName %> (<%= name %>Id: ObjectID!, data: Update<%= capitalName %>!): <%= capitalName %>!
+  }
+
+  extend type Subscription {
+    <%= name %> (<%= name %>Id: ObjectID!): <%= capitalName %>!
+  }
+
+  input Update<%= capitalName %> {
+    content: String
+  }
+
+  type <%= capitalName %> implements Document {
+    _id: ObjectID!
+    content: String!
+    poster: User!
+  }
+`
+
+export const resolvers: IResolvers<<%= capitalName %>, Context> = {
+  Query: {
+    async <%= name %>s (): Promise<<%= capitalName %>[]> {
+      const <%= name %>s = await <%= capitalName %>Service.instance.findAll()
+      return <%= name %>s
+    },
+    async <%= name %> (_source, { <%= name %>Id }): Promise<<%= capitalName %> | null> {
+      return <%= capitalName %>Service.instance.findById(<%= name %>Id)
+    },
+  },
+  Mutation: {
+    async create<%= capitalName %> (_source, args: Create<%= capitalName %>Request, ctx): Promise<<%= capitalName %>> {
+      const user = await authorize(ctx)
+      return <%= capitalName %>Service.instance.create<%= capitalName %>(user, args)
+    },
+    async update<%= capitalName %> (_source, args: Update<%= capitalName %>Request, ctx): Promise<<%= capitalName %>> {
+      const user = await authorize(ctx)
+      const <%= name %> = await <%= capitalName %>Service.instance.update<%= capitalName %>(user, args)
+      <%= capitalName %>PubSub.instance.publishUpdate(<%= name %>)
+      return <%= name %>
+    },
+  },
+  Subscription: {
+    <%= name %>: {
+      async subscribe (_source, { <%= name %>Id }) {
+        const <%= name %> = await <%= capitalName %>Service.instance.findById$(<%= name %>Id)
+        return <%= capitalName %>PubSub.instance.listenForUpdates(<%= name %>)
+      },
+    },
+  },
+  <%= capitalName %>: {
+    async poster (source): Promise<User> {
+      return UserService.instance.findById$(source.posterId)
+    },
+  },
+}

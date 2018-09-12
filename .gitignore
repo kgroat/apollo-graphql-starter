@@ -1,0 +1,5 @@
+node_modules
+.vscode/settings.json
+jestCache
+*.js
+*.js.map

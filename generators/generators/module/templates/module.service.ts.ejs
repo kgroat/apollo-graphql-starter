@@ -1,0 +1,86 @@
+
+import { ObjectID } from 'mongodb'
+import { toObjectId } from '../../helpers/objectId'
+import { getCollection } from '../../db'
+import { User } from '../user/user.types'
+
+import {
+  <%= capitalName %>NotFoundError,
+  CannotEdit<%= capitalName %>Error,
+} from './<%= name %>.errors'
+import {
+  <%= capitalName %>,
+  I<%= capitalName %>,
+  Create<%= capitalName %>Request,
+  Update<%= capitalName %>Request,
+} from './<%= name %>.types'
+
+export class <%= capitalName %>Service {
+  private constructor (
+    private <%= name %>Collection = getCollection<I<%= capitalName %>>('<%= name %>s'),
+  ) {}
+
+  static instance = new <%= capitalName %>Service()
+
+  async findAll (): Promise<<%= capitalName %>[]> {
+    const <%= name %>s = await this.<%= name %>Collection.find().toArray()
+    return <%= name %>s.map(this.wrap$)
+  }
+
+  async findById (_id: string | ObjectID): Promise<<%= capitalName %> | null> {
+    _id = toObjectId(_id)
+    const <%= name %> = await this.<%= name %>Collection.findOne({ _id })
+    return this.wrap(<%= name %>)
+  }
+
+  async findById$ (_id: string | ObjectID): Promise<<%= capitalName %>> {
+    const <%= name %> = await this.findById(_id)
+    if (<%= name %> === null) {
+      throw new <%= capitalName %>NotFoundError({ _id })
+    }
+
+    return <%= name %>
+  }
+
+  async create<%= capitalName %> (user: User, { content }: Create<%= capitalName %>Request): Promise<<%= capitalName %>> {
+    const <%= name %>: I<%= capitalName %> = {
+      content,
+      posterId: user._id!,
+    }
+
+    const result = await this.<%= name %>Collection.insertOne(<%= name %>)
+    if (result.insertedCount < 1) {
+      throw new Error(`<%= capitalName %> was not created correctly!`)
+    }
+    <%= name %>._id = result.insertedId
+
+    return this.wrap$(<%= name %>)
+  }
+
+  async update<%= capitalName %> (user: User, { <%= name %>Id, data }: Update<%= capitalName %>Request): Promise<<%= capitalName %>> {
+    const existing<%= capitalName %> = await this.findById$(<%= name %>Id)
+    if (!existing<%= capitalName %>.posterId.equals(user._id!)) {
+      throw new CannotEdit<%= capitalName %>Error()
+    }
+
+    const result = await this.<%= name %>Collection.findOneAndUpdate(
+      { _id: <%= name %>Id, posterId: user._id },
+      { $set: data },
+      { returnOriginal: false },
+    )
+
+    return this.wrap$(result.value!)
+  }
+
+  private wrap (<%= name %>: I<%= capitalName %> | null): <%= capitalName %> | null {
+    if (!<%= name %>) {
+      return <%= name %>
+    }
+
+    return this.wrap$(<%= name %>)
+  }
+
+  private wrap$ (<%= name %>: I<%= capitalName %>): <%= capitalName %> {
+    return new <%= capitalName %>(<%= name %>)
+  }
+}

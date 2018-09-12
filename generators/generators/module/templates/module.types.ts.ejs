@@ -1,0 +1,27 @@
+
+import { ObjectID } from 'mongodb'
+import { Document } from '../document/document.types'
+import { toObjectId } from '../../helpers/objectId'
+
+export class <%= capitalName %> extends Document {
+  content: string
+  posterId: ObjectID
+
+  constructor (<%= name %>: I<%= capitalName %>) {
+    super(<%= name %>)
+
+    this.content = <%= name %>.content!
+    this.posterId = toObjectId(<%= name %>.posterId!)
+  }
+}
+
+export interface I<%= capitalName %> extends <%= capitalName %> {}
+
+export interface Create<%= capitalName %>Request {
+  content: string
+}
+
+export interface Update<%= capitalName %>Request {
+  <%= name %>Id: ObjectID
+  data: Partial<I<%= capitalName %>>
+}
