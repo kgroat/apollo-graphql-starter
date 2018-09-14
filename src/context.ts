@@ -73,16 +73,12 @@ async function decodeAuthorization (authorization: string | undefined): Promise<
   }
 
   const match = AUTH_SCHEME.exec(authorization)
-  if (!match) {
-    throw new AuthenticationError('Invalid `authorization` token')
-  }
-
-  const token = match[1]
-  if (token.length === 0) {
+  if (!match || match[1].length === 0) {
     throw new AuthenticationError('Invalid `authorization` token')
   }
 
   try {
+    const token = match[1]
     return await AuthService.instance.decodeJwt(token)
   } catch (_err) {
     throw new AuthenticationError('Invalid `authorization` token')

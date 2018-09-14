@@ -1,20 +1,11 @@
 
 import { ObjectID } from 'mongodb'
-import { Document } from '../document/document.types'
+import { Document } from '../common/common.types'
 
-export class <%= capitalName %> extends Document {
+export interface <%= capitalName %> extends Document {
   content: string
-  posterId: ObjectID
-
-  constructor (<%= name %>: I<%= capitalName %>) {
-    super(<%= name %>)
-
-    this.content = <%= name %>.content!
-    this.posterId = <%= name %>.posterId!
-  }
+  userId: ObjectID
 }
-
-export interface I<%= capitalName %> extends <%= capitalName %> {}
 
 export interface Create<%= capitalName %>Request {
   content: string
@@ -22,5 +13,5 @@ export interface Create<%= capitalName %>Request {
 
 export interface Update<%= capitalName %>Request {
   <%= name %>Id: ObjectID
-  data: Partial<I<%= capitalName %>>
+  data: Partial<<%= capitalName %>>
 }

@@ -23,7 +23,7 @@ interface SchemaFileContent {
   resolvers?: IResolvers
 }
 
-const schemaFiles = glob.sync(join(__dirname, './**/*.schema.ts'))
+const schemaFiles = glob.sync(join(__dirname, './**/!(__tests__|__mocks__)/*.schema.ts'))
 
 let gatheredTypeDefs: string[] = [baseTypeDef]
 let gatheredResolvers: IResolvers = {

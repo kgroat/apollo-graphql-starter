@@ -5,6 +5,7 @@ import { test as passwordTest } from 'owasp-password-strength-test'
 import { fail } from 'assert'
 import { BCRYPT_SALT_ROUNDS } from '../../../config'
 import { InputValidationError } from '../../../errors'
+import { LoginError } from '../../auth/auth.errors'
 import {
   UserNotFoundError,
   UserExistsError,
@@ -15,9 +16,6 @@ import { User } from '../user.types'
 
 import { UserService } from '../user.service'
 
-jest.mock('mongodb')
-jest.mock('bcrypt')
-jest.mock('owasp-password-strength-test')
 jest.mock('../../../config')
 jest.mock('../../../db')
 jest.mock('../../common/common.service')
@@ -332,7 +330,7 @@ describe('UserService', () => {
       })
 
       expect(insertOne).toHaveBeenCalledTimes(1)
-      expect(insertOne.mock.calls[0]).toEqual([{ username, passwordHash }])
+      expect(insertOne).toHaveBeenCalledWith({ username, passwordHash })
     })
 
     it('should return a user with the appropriate props', async () => {
@@ -435,11 +433,11 @@ describe('UserService', () => {
       )
 
       expect(findOneAndUpdate).toHaveBeenCalledTimes(1)
-      expect(findOneAndUpdate.mock.calls[0]).toEqual([
+      expect(findOneAndUpdate).toHaveBeenCalledWith(
         { _id },
         { $set: { passwordHash } },
         { returnOriginal: false },
-      ])
+      )
     })
 
     it('should return a user with the appropriate props', async () => {
@@ -458,6 +456,58 @@ describe('UserService', () => {
           verifyPassword: 'abc',
         },
       )
+
+      checkProps(user, result)
+    })
+  })
+
+  describe('checkPassword', () => {
+    let findOne = collection.findOne as jest.Mock
+
+    beforeEach(() => {
+      // clear mocked resolve values
+      findOne = collection.findOne = jest.fn(() => Promise.resolve(null))
+    })
+
+    it('should throw a LoginError if the user does not exist', async () => {
+      findOne.mockResolvedValue(null)
+
+      const promise = UserService.instance.checkPassword('user', 'pass')
+
+      await expect(promise).rejects.toBeInstanceOf(LoginError)
+    })
+
+    it('should throw a LoginError if the password does not match the passwordHash', async () => {
+      findOne.mockResolvedValue({})
+      ;(compare as jest.Mock).mockResolvedValueOnce(false)
+
+      const promise = UserService.instance.checkPassword('user', 'pass')
+
+      await expect(promise).rejects.toBeInstanceOf(LoginError)
+    })
+
+    it('should call bcrypt.compare once', async () => {
+      const passwordHash = 'some hash'
+      findOne.mockResolvedValue({
+        passwordHash,
+      })
+
+      const password = 'pass'
+      await UserService.instance.checkPassword('user', password)
+
+      expect(compare).toHaveBeenCalledTimes(1)
+      expect(compare).toHaveBeenCalledWith(password, passwordHash)
+    })
+
+    it('should return a user with the appropriate props', async () => {
+      const user = {
+        _id: new ObjectID(),
+        username: 'dude',
+        passwordHash: 'my hash',
+      }
+      findOne.mockResolvedValueOnce(user)
+
+      const result = await UserService.instance.checkPassword('user', 'pass')
 
       checkProps(user, result)
     })

@@ -13,14 +13,15 @@ export class BasePubSub<T> {
   }
 
   protected makeSubscription<K extends keyof T> (event: string, original?: { [key in K]: T[K] }): AsyncIterator<T[K]> {
+    const baseIterator = this.core.asyncIterator<T[K]>(event)
     if (original === undefined) {
-      return this.core.asyncIterator<T[K]>(event)
+      return baseIterator
     }
 
     return (async function* () {
       yield original
-      for await (const value of this.makeSubscription(event)) {
-        yield value
+      for await (const item of (baseIterator as any)) {
+        yield item
       }
     }).apply(this)
   }

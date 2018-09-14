@@ -6,8 +6,6 @@ import { AuthService } from '../auth.service'
 const mockSign = sign as jest.Mock & typeof sign
 const mockVerify = verify as jest.Mock & typeof verify
 
-jest.mock('jsonwebtoken')
-jest.mock('mongodb')
 jest.mock('../../../config')
 
 describe('AuthService', () => {

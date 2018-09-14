@@ -1,5 +1,11 @@
 
-import { Collection, AggregationCursor, Cursor, InsertOneWriteOpResult, WriteOpResult, UpdateWriteOpResult, ReplaceWriteOpResult, ChangeStream, FindAndModifyWriteOpResultObject } from 'mongodb'
+import { MongoClient, Db, Collection, AggregationCursor, Cursor, InsertOneWriteOpResult, WriteOpResult, UpdateWriteOpResult, ReplaceWriteOpResult, ChangeStream, FindAndModifyWriteOpResultObject } from 'mongodb'
+
+import { mockEventEmitter } from './_node'
+
+export const connect = jest.fn(() => {
+  return mockClient()
+})
 
 export class ObjectID {
   constructor (
@@ -59,6 +65,52 @@ const replaceWriteOpResult: ReplaceWriteOpResult = {
 
 const findAndModifyWriteOpResultObject: FindAndModifyWriteOpResultObject = {
   ok: 1,
+}
+
+export function mockClient (): MongoClient {
+  const client: MongoClient = {
+    connect: jest.fn(() => client),
+    close: jest.fn(() => Promise.resolve()),
+    db: jest.fn(mockDb),
+    isConnected: jest.fn(() => true),
+    logout: jest.fn(() => Promise.resolve(null)),
+    startSession: jest.fn(() => ({})),
+  } as any
+  return client
+}
+
+export function mockDb (): Db {
+  const db: Db = mockEventEmitter({
+    serverConfig: {
+      connections: jest.fn(() => []),
+    } as any,
+    bufferMaxEntries: 1,
+    databaseName: 'test-db',
+    options: {},
+    native_parser: true,
+    slaveOk: true,
+    writeConcern: 'none',
+    addUser: jest.fn(() => Promise.resolve(null)),
+    admin: jest.fn(() => db),
+    collection: jest.fn(mockCollection),
+    collections: jest.fn(() => Promise.resolve([mockCollection()])),
+    command: jest.fn(() => Promise.resolve(null)),
+    createCollection: jest.fn(() => Promise.resolve(mockCollection())),
+    createIndex: jest.fn(() => Promise.resolve(null)),
+    dropCollection: jest.fn(() => Promise.resolve(true)),
+    dropDatabase: jest.fn(() => Promise.resolve(null)),
+    executeDbAdminCommand: jest.fn(() => Promise.resolve(null)),
+    indexInformation: jest.fn(() => Promise.resolve(null)),
+    listCollections: jest.fn(() => Promise.resolve(mockCursor)),
+    profilingInfo: jest.fn(() => Promise.resolve(null)),
+    profilingLevel: jest.fn(() => Promise.resolve('off')),
+    removeUser: jest.fn(() => Promise.resolve(null)),
+    renameCollection: jest.fn(() => Promise.resolve(mockCollection())),
+    setProfilingLevel: jest.fn((level) => Promise.resolve(level)),
+    stats: jest.fn(() => Promise.resolve(null)),
+  }) as Db
+
+  return db
 }
 
 export function mockCursor<T> (): Cursor<T> {

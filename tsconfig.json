@@ -12,12 +12,12 @@
     "allowJs": false,
     "lib": ["es2015", "es2016", "es2017", "esnext.asynciterable"],
     "moduleResolution": "node",
+    "outDir": "tmp"
   },
   "include": [
-    "src/**/*", "__mocks__/mongodb.ts", "__mocks__/jsonwebtoken.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "src/**/*.spec.ts"
+    "node_modules"
   ]
 }

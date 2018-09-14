@@ -5,7 +5,6 @@ import { AuthService } from '../auth.service'
 
 import { authResolvers } from '../auth.schema'
 
-jest.mock('mongodb')
 jest.mock('../auth.service')
 jest.mock('../../user/user.service')
 

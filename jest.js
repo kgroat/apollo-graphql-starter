@@ -20,19 +20,19 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: [
     'src/**/*.ts',
+    // ignore untestable files
     '!src/bootstrap.ts',
     '!src/config.ts',
-    '!src/db.ts',
     '!src/schema.ts',
     '!src/server.ts',
     '!**/*.d.ts',
   ],
   coverageThreshold: {
     global: {
-      statements: 59,
-      branches: 35,
-      functions: 61,
-      lines: 59,
+      statements: 60,
+      branches: 60,
+      functions: 60,
+      lines: 60,
     },
   },
 }

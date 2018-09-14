@@ -1,6 +1,5 @@
 
 import { ObjectID } from 'mongodb'
-import { objectIdToString } from '../../helpers/objectId'
 import { BasePubSub } from '../../pubsub'
 
 import { <%= capitalName %> } from './<%= name %>.types'
@@ -25,6 +24,6 @@ export class <%= capitalName %>PubSub extends BasePubSub<Update<%= capitalName %
   }
 
   private UPDATE_CODE (<%= name %>Id: ObjectID) {
-    return `<%= name.toUpperCase() %>:UPDATE:${objectIdToString(<%= name %>Id)}`
+    return `POST:UPDATE:${<%= name %>Id.toHexString()}`
   }
 }

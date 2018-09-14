@@ -1,34 +1,40 @@
 
 import { ObjectID } from 'mongodb'
 import { getCollection } from '../../db'
-import { User } from '../user/user.types'
+import { DbService } from '../common/common.service'
+import { PaginationData } from '../common/common.types'
 
-import {
-  <%= capitalName %>NotFoundError,
-  CannotEdit<%= capitalName %>Error,
-} from './<%= name %>.errors'
-import {
-  <%= capitalName %>,
-  I<%= capitalName %>,
-  Create<%= capitalName %>Request,
-  Update<%= capitalName %>Request,
-} from './<%= name %>.types'
+import { <%= capitalName %>NotFoundError, CannotEdit<%= capitalName %>Error } from './<%= name %>.errors'
+import { <%= capitalName %>, Create<%= capitalName %>Request, Update<%= capitalName %>Request } from './<%= name %>.types'
 
-export class <%= capitalName %>Service {
-  private constructor (
-    private <%= name %>Collection = getCollection<I<%= capitalName %>>('<%= name %>s'),
-  ) {}
+export class <%= capitalName %>Service extends DbService<<%= capitalName %>> {
+  constructor (
+    collection = getCollection<<%= capitalName %>>('<%= name %>s'),
+  ) {
+    super(collection)
+  }
 
   static instance = new <%= capitalName %>Service()
 
-  async findAll (): Promise<<%= capitalName %>[]> {
-    const <%= name %>s = await this.<%= name %>Collection.find().toArray()
-    return <%= name %>s.map(this.wrap$)
+  async findAll (pagination?: PaginationData): Promise<<%= capitalName %>[]> {
+    const <%= name %>s = await this.paginate(
+      this.collection.find(),
+      pagination,
+    )
+    return <%= name %>s
+  }
+
+  async findAllBy<%= capitalName %>er (userId: ObjectID, pagination?: PaginationData): Promise<<%= capitalName %>[]> {
+    const <%= name %>s = await this.paginate(
+      this.collection.find({ userId }),
+      pagination,
+    )
+    return <%= name %>s
   }
 
   async findById (_id: ObjectID): Promise<<%= capitalName %> | null> {
-    const <%= name %> = await this.<%= name %>Collection.findOne({ _id })
-    return this.wrap(<%= name %>)
+    const <%= name %> = await this.collection.findOne({ _id })
+    return <%= name %>
   }
 
   async findById$ (_id: ObjectID): Promise<<%= capitalName %>> {
@@ -40,45 +46,35 @@ export class <%= capitalName %>Service {
     return <%= name %>
   }
 
-  async create<%= capitalName %> (user: User, { content }: Create<%= capitalName %>Request): Promise<<%= capitalName %>> {
-    const <%= name %>: I<%= capitalName %> = {
+  async create<%= capitalName %> (userId: ObjectID, { content }: Create<%= capitalName %>Request): Promise<<%= capitalName %>> {
+    const <%= name %>: <%= capitalName %> = {
       content,
-      posterId: user._id!,
+      userId,
     }
 
-    const result = await this.<%= name %>Collection.insertOne(<%= name %>)
+    const result = await this.collection.insertOne(<%= name %>)
     if (result.insertedCount < 1) {
       throw new Error(`<%= capitalName %> was not created correctly!`)
     }
-    <%= name %>._id = result.insertedId
 
-    return this.wrap$(<%= name %>)
+    return {
+      ...<%= name %>,
+      _id: result.insertedId,
+    }
   }
 
-  async update<%= capitalName %> (user: User, { <%= name %>Id, data }: Update<%= capitalName %>Request): Promise<<%= capitalName %>> {
+  async update<%= capitalName %> (userId: ObjectID, { <%= name %>Id, data }: Update<%= capitalName %>Request): Promise<<%= capitalName %>> {
     const existing<%= capitalName %> = await this.findById$(<%= name %>Id)
-    if (!existing<%= capitalName %>.posterId.equals(user._id!)) {
+    if (!existing<%= capitalName %>.userId.equals(userId)) {
       throw new CannotEdit<%= capitalName %>Error()
     }
 
-    const result = await this.<%= name %>Collection.findOneAndUpdate(
-      { _id: <%= name %>Id, posterId: user._id },
+    const result = await this.collection.findOneAndUpdate(
+      { _id: <%= name %>Id, userId },
       { $set: data },
       { returnOriginal: false },
     )
 
-    return this.wrap$(result.value!)
-  }
-
-  private wrap (<%= name %>: I<%= capitalName %> | null): <%= capitalName %> | null {
-    if (!<%= name %>) {
-      return <%= name %>
-    }
-
-    return this.wrap$(<%= name %>)
-  }
-
-  private wrap$ (<%= name %>: I<%= capitalName %>): <%= capitalName %> {
-    return new <%= capitalName %>(<%= name %>)
+    return result.value!
   }
 }

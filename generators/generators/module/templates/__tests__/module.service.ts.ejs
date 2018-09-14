@@ -1,17 +1,17 @@
 
 import { fail } from 'assert'
 import { Collection, ObjectID } from 'mongodb'
-import { PostService } from '../post.service'
-import { PostNotFoundError, CannotEditPostError } from '../post.errors'
+import { <%= capitalName %>Service } from '../<%= name %>.service'
+import { <%= capitalName %>NotFoundError, CannotEdit<%= capitalName %>Error } from '../<%= name %>.errors'
 
 jest.mock('../../../db')
 jest.mock('../../common/common.service')
 jest.mock('../../../config')
 
-const paginate: jest.Mock = (PostService.instance as any).paginate
-const collection: Collection = (PostService.instance as any).collection
+const paginate: jest.Mock = (<%= capitalName %>Service.instance as any).paginate
+const collection: Collection = (<%= capitalName %>Service.instance as any).collection
 
-describe('PostService', () => {
+describe('<%= capitalName %>Service', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -21,7 +21,7 @@ describe('PostService', () => {
     const find = collection.find as jest.Mock
 
     it('should call this.collection.find once', async () => {
-      await PostService.instance.findAll()
+      await <%= capitalName %>Service.instance.findAll()
 
       expect(find).toHaveBeenCalledTimes(1)
     })
@@ -29,30 +29,30 @@ describe('PostService', () => {
     it('should call this.paginate once with the supplied pagination data', async () => {
       const paginationData = {}
 
-      await PostService.instance.findAll(paginationData)
+      await <%= capitalName %>Service.instance.findAll(paginationData)
 
       expect(paginate).toHaveBeenCalledTimes(1)
       expect(paginate.mock.calls[0][1]).toBe(paginationData)
     })
   })
 
-  describe('findAllByPoster', () => {
+  describe('findAllBy<%= capitalName %>er', () => {
     // tslint:disable-next-line
     const find = collection.find as jest.Mock
 
-    it('should call this.collection.find once with supplied posterId', async () => {
-      const posterId = new ObjectID()
+    it('should call this.collection.find once with supplied userId', async () => {
+      const userId = new ObjectID()
 
-      await PostService.instance.findAllByPoster(posterId)
+      await <%= capitalName %>Service.instance.findAllBy<%= capitalName %>er(userId)
 
       expect(find).toHaveBeenCalledTimes(1)
-      expect(find.mock.calls[0][0].posterId).toBe(posterId)
+      expect(find.mock.calls[0][0].userId).toBe(userId)
     })
 
     it('should call this.paginate once with the supplied pagination data', async () => {
       const paginationData = {}
 
-      await PostService.instance.findAllByPoster(new ObjectID(), paginationData)
+      await <%= capitalName %>Service.instance.findAllBy<%= capitalName %>er(new ObjectID(), paginationData)
 
       expect(paginate).toHaveBeenCalledTimes(1)
       expect(paginate.mock.calls[0][1]).toBe(paginationData)
@@ -65,16 +65,16 @@ describe('PostService', () => {
     it('should call this.collection.findOne once with supplied _id', async () => {
       const _id = new ObjectID()
 
-      await PostService.instance.findById(_id)
+      await <%= capitalName %>Service.instance.findById(_id)
 
       expect(findOne).toHaveBeenCalledTimes(1)
       expect(findOne.mock.calls[0][0]._id).toBe(_id)
     })
 
-    it('should not throw an error if no post is found', async () => {
+    it('should not throw an error if no <%= name %> is found', async () => {
       findOne.mockResolvedValueOnce(null)
 
-      await PostService.instance.findById(new ObjectID())
+      await <%= capitalName %>Service.instance.findById(new ObjectID())
     })
   })
 
@@ -85,52 +85,52 @@ describe('PostService', () => {
       findOne.mockResolvedValueOnce({})
       const _id = new ObjectID()
 
-      await PostService.instance.findById$(_id)
+      await <%= capitalName %>Service.instance.findById$(_id)
 
       expect(findOne).toHaveBeenCalledTimes(1)
       expect(findOne.mock.calls[0][0]._id).toBe(_id)
     })
 
-    it('should throw a PostNotFoundError if no post is found', async () => {
+    it('should throw a <%= capitalName %>NotFoundError if no <%= name %> is found', async () => {
       findOne.mockResolvedValueOnce(null)
 
       try {
-        await PostService.instance.findById$(new ObjectID())
+        await <%= capitalName %>Service.instance.findById$(new ObjectID())
         fail('should have thrown an error')
       } catch (err) {
-        expect(err).toBeInstanceOf(PostNotFoundError)
+        expect(err).toBeInstanceOf(<%= capitalName %>NotFoundError)
       }
     })
   })
 
-  describe('createPost', () => {
+  describe('create<%= capitalName %>', () => {
     const insertOne = collection.insertOne as jest.Mock
 
-    it('should call this.collection.insertOne with the supplied posterId and content', async () => {
-      const posterId = new ObjectID()
+    it('should call this.collection.insertOne with the supplied userId and content', async () => {
+      const userId = new ObjectID()
       const content = 'test content'
 
-      await PostService.instance.createPost(posterId, { content })
+      await <%= capitalName %>Service.instance.create<%= capitalName %>(userId, { content })
 
       expect(insertOne).toHaveBeenCalledTimes(1)
       expect(insertOne.mock.calls[0][0]).toEqual({
-        posterId,
+        userId,
         content,
       })
     })
 
-    it('should return a post whose _id is the inserted id', async () => {
+    it('should return a <%= name %> whose _id is the inserted id', async () => {
       const insertedId = new ObjectID()
       insertOne.mockResolvedValueOnce({
         insertedId,
         insertedCount: 1,
       })
 
-      const newPost = await PostService.instance.createPost(new ObjectID(), {
+      const new<%= capitalName %> = await <%= capitalName %>Service.instance.create<%= capitalName %>(new ObjectID(), {
         content: 'test content',
       })
 
-      expect(newPost._id).toBe(insertedId)
+      expect(new<%= capitalName %>._id).toBe(insertedId)
     })
 
     it('should throw an error if this.collection.insertOne does not succeed', async () => {
@@ -139,7 +139,7 @@ describe('PostService', () => {
       })
 
       try {
-        await PostService.instance.createPost(new ObjectID(), {
+        await <%= capitalName %>Service.instance.create<%= capitalName %>(new ObjectID(), {
           content: 'test content',
         })
         fail('should have thrown an error')
@@ -149,68 +149,68 @@ describe('PostService', () => {
     })
   })
 
-  describe('updatePost', () => {
+  describe('update<%= capitalName %>', () => {
     const findOne = collection.findOne as jest.Mock
     const findOneAndUpdate = collection.findOneAndUpdate as jest.Mock
 
     it('should call this.collection.findOneAndUpdate once', async () => {
-      const postId = new ObjectID()
-      const posterId = new ObjectID()
+      const <%= name %>Id = new ObjectID()
+      const userId = new ObjectID()
       findOne.mockResolvedValueOnce({
         _id: new ObjectID(),
-        posterId,
+        userId,
         content: 'bar',
       })
       const data = {
         content: 'foo',
       }
-      await PostService.instance.updatePost(posterId, {
-        postId,
+      await <%= capitalName %>Service.instance.update<%= capitalName %>(userId, {
+        <%= name %>Id,
         data,
       })
 
       expect(findOneAndUpdate).toHaveBeenCalledTimes(1)
       expect(findOneAndUpdate).toHaveBeenCalledWith(
-        { _id: postId, posterId },
+        { _id: <%= name %>Id, userId },
         { $set: data },
         { returnOriginal: false },
       )
     })
 
-    it('should throw a PostNotFoundError if no post is found with the given id', async () => {
+    it('should throw a <%= capitalName %>NotFoundError if no <%= name %> is found with the given id', async () => {
       findOne.mockResolvedValueOnce(null)
 
       try {
-        await PostService.instance.updatePost(new ObjectID(), {
-          postId: new ObjectID(),
+        await <%= capitalName %>Service.instance.update<%= capitalName %>(new ObjectID(), {
+          <%= name %>Id: new ObjectID(),
           data: {
             content: 'foo',
           },
         })
         fail('should have thrown an error')
       } catch (err) {
-        expect(err).toBeInstanceOf(PostNotFoundError)
+        expect(err).toBeInstanceOf(<%= capitalName %>NotFoundError)
       }
     })
 
-    it('should throw a CannotEditPostError if the wrong posterId is passed in', async () => {
-      const posterId = new ObjectID()
+    it('should throw a CannotEdit<%= capitalName %>Error if the wrong userId is passed in', async () => {
+      const userId = new ObjectID()
       findOne.mockResolvedValueOnce({
         _id: new ObjectID(),
-        posterId,
+        userId,
         content: 'bar',
       })
 
       try {
-        await PostService.instance.updatePost(new ObjectID(), {
-          postId: new ObjectID(),
+        await <%= capitalName %>Service.instance.update<%= capitalName %>(new ObjectID(), {
+          <%= name %>Id: new ObjectID(),
           data: {
             content: 'foo',
           },
         })
         fail('should have thrown an error')
       } catch (err) {
-        expect(err).toBeInstanceOf(CannotEditPostError)
+        expect(err).toBeInstanceOf(CannotEdit<%= capitalName %>Error)
       }
     })
   })

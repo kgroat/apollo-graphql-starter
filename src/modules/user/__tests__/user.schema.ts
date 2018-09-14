@@ -6,7 +6,6 @@ import { CreateUserRequest } from '../user.types'
 
 import { userResolvers } from '../user.schema'
 
-jest.mock('mongodb')
 jest.mock('../../../context')
 jest.mock('../../post/post.service')
 jest.mock('../user.service')

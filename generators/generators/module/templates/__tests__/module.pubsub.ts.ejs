@@ -1,31 +1,31 @@
 
 import { ObjectID } from 'mongodb'
 import { BasePubSub as MockBasePubSub } from '../../../__mocks__/pubsub'
-import { Post } from '../post.types'
+import { <%= capitalName %> } from '../<%= name %>.types'
 
-import { PostPubSub } from '../post.pubsub'
+import { <%= capitalName %>PubSub } from '../<%= name %>.pubsub'
 
 jest.mock('../../../pubsub')
 
-const mockPubSub: MockBasePubSub = PostPubSub.instance as any
+const mockPubSub: MockBasePubSub = <%= capitalName %>PubSub.instance as any
 
-describe('PostPubSub', () => {
+describe('<%= capitalName %>PubSub', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   describe('listenForUpdates', () => {
     it('should call BasePubSub:makeSubscription once', () => {
-      const post: Post = {
+      const <%= name %>: <%= capitalName %> = {
         _id: new ObjectID(),
         content: 'foo',
-        posterId: new ObjectID(),
+        userId: new ObjectID(),
       }
 
-      PostPubSub.instance.listenForUpdates(post)
+      <%= capitalName %>PubSub.instance.listenForUpdates(<%= name %>)
 
       expect(mockPubSub.makeSubscription).toHaveBeenCalledTimes(1)
-      expect(mockPubSub.makeSubscription.mock.calls[0][1]).toEqual({ post })
+      expect(mockPubSub.makeSubscription.mock.calls[0][1]).toEqual({ <%= name %> })
     })
 
     it('should return the result of BasePubSub:makeSubscription', () => {
@@ -34,10 +34,10 @@ describe('PostPubSub', () => {
       }
       mockPubSub.makeSubscription.mockReturnValue(expected)
 
-      const result = PostPubSub.instance.listenForUpdates({
+      const result = <%= capitalName %>PubSub.instance.listenForUpdates({
         _id: new ObjectID(),
         content: 'bar',
-        posterId: new ObjectID(),
+        userId: new ObjectID(),
       })
 
       expect(result).toBe(expected)
@@ -46,16 +46,16 @@ describe('PostPubSub', () => {
 
   describe('publishUpdate', () => {
     it('should call BasePubSub:publishData once', () => {
-      const post = {
+      const <%= name %> = {
         _id: new ObjectID(),
         content: 'bar',
-        posterId: new ObjectID(),
+        userId: new ObjectID(),
       }
 
-      PostPubSub.instance.publishUpdate(post)
+      <%= capitalName %>PubSub.instance.publishUpdate(<%= name %>)
 
       expect(mockPubSub.publishData).toHaveBeenCalledTimes(1)
-      expect(mockPubSub.publishData.mock.calls[0][1]).toEqual({ post })
+      expect(mockPubSub.publishData.mock.calls[0][1]).toEqual({ <%= name %> })
     })
   })
 })

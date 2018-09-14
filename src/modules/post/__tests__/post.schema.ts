@@ -7,7 +7,6 @@ import { PostPubSub } from '../post.pubsub'
 
 import { postResolvers } from '../post.schema'
 
-jest.mock('mongodb')
 jest.mock('../../../helpers/authorize')
 jest.mock('../../user/user.service')
 jest.mock('../post.service')

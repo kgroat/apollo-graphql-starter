@@ -1,17 +1,22 @@
 
 // const npsUtils = require('nps-utils')
 
-const nodeArgs = '-r ts-node/register src/bootstrap.ts'
+const nodeArgs = '--project ./tsconfig.json src/bootstrap.ts'
 
 module.exports = {
   scripts: {
     default: {
-      script: `node ${nodeArgs}`,
+      script: `ts-node ${nodeArgs}`,
       description: 'Starts the graphql server.',
     },
     dev: {
-      script: `nodemon --watch ./src --ignore \'./src/**/__tests__/**/*\' --ext ts -- --inspect=9222 ${nodeArgs}`,
-      description: 'Runs the graphql app in development mode.',
+      script: `nodemon`,
+      description: 'Runs the graphql app in watch mode with attachable debugger.',
+      server: {
+        script: `ts-node --inspect=9222 ${nodeArgs}`,
+        description: 'Runs the graphql app with attachable debugger.',
+        hiddenFromHelp: true,
+      }
     },
     test: {
       script: `jest --config ./jest.js --runInBand`,
