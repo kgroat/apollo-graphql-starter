@@ -13,7 +13,7 @@ declare namespace config {
 }
 
 const defaultConfig: config.Config = {
-  PORT: 3000,
+  PORT: 3001,
   NODE_ENV: 'development',
   MONGO_URI: 'mongodb://localhost/apollo-graphql-starter',
   JWT_SECRET: 'This is not a very good secret',

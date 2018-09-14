@@ -32,7 +32,7 @@ $ npm run interactive
 1. Go to the debugger menu and launch the `Node: Nodemon` configuration.
 
 ## API Rundown
-After starting the application, you can go to `http://localhost:3000` to view a graphical interface for making  GraphQL requests directly to the server.  You can use the `SCHEMA` tab to the right of the window to explore the various operations that can be executed on the GraphQL endpoint.
+After starting the application, you can go to `http://localhost:3001` to view a graphical interface for making  GraphQL requests directly to the server.  You can use the `SCHEMA` tab to the right of the window to explore the various operations that can be executed on the GraphQL endpoint.
 
 You should start by creating a user.  To do that, execute the following mutation:
 ```graphql
@@ -97,7 +97,7 @@ subscription Post {
 You should see the post you just created.  You will also notice that the button in the middle of the window has changed from a play button to a stop button.  This means that there is an active subscription, and any new data passed to the subscription will automatically show up as a new frame in the underlying websocket.
 
 
-To see this in action, open a separate tab/window to `http://localhost:3000` and execute the following mutation:
+To see this in action, open a separate tab/window to `http://localhost:3001` and execute the following mutation:
 ```graphql
 mutation UpdatePost {
   updatePost(
