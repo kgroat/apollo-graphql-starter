@@ -2,7 +2,7 @@
 import { TestResult } from 'owasp-password-strength-test'
 import { UserInputError } from 'apollo-server'
 import { FilterQuery } from 'mongodb'
-import { DbNotFoundError } from '../../errors'
+import { DbNotFoundError, InputValidationError } from '../../errors'
 
 import { User } from './user.types'
 
@@ -24,7 +24,7 @@ export class SetPasswordMismatchError extends UserInputError {
   }
 }
 
-export class PasswordStrengthError extends UserInputError {
+export class PasswordStrengthError extends InputValidationError {
   constructor (
     public result: TestResult,
   ) {

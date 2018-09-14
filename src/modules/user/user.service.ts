@@ -2,9 +2,12 @@
 import { hash, compare } from 'bcrypt'
 import { ObjectID } from 'mongodb'
 import { test as testPassword } from 'owasp-password-strength-test'
-import { toObjectId } from '../../helpers/objectId'
 import { BCRYPT_SALT_ROUNDS } from '../../config'
 import { getCollection } from '../../db'
+import { InputValidationError } from '../../errors'
+import { LoginError } from '../auth/auth.errors'
+import { Document, PaginationData } from '../common/common.types'
+import { DbService } from '../common/common.service'
 
 import {
   UserNotFoundError,
@@ -13,33 +16,39 @@ import {
   PasswordStrengthError,
 } from './user.errors'
 import {
-  IUser,
   User,
   CreateUserRequest,
   ChangePasswordRequest,
 } from './user.types'
 
-const passwordManager = new WeakMap<User, string>()
+interface PrivateUser extends Document {
+  username: string
+  passwordHash: string
+}
 
-export class UserService {
+export class UserService extends DbService<PrivateUser> {
   private constructor (
-    private userCollection = getCollection<IUser>('users'),
-  ) {}
+    collection = getCollection<PrivateUser>('users'),
+  ) {
+    super(collection)
+  }
 
   static readonly instance = new UserService()
 
-  async findAll (): Promise<User[]> {
-    const users = await this.userCollection.find().toArray()
-    return users.map(this.wrap$)
+  async findAll (pagination?: PaginationData): Promise<User[]> {
+    const users = await this.paginate(
+      this.collection.find(),
+      pagination,
+    )
+    return users.map(this.trim$)
   }
 
-  async findById (_id: string | ObjectID): Promise<User | null> {
-    _id = toObjectId(_id)
-    const user = await this.userCollection.findOne({ _id })
-    return this.wrap(user)
+  async findById (_id: ObjectID): Promise<User | null> {
+    const user = await this.collection.findOne({ _id })
+    return this.trim(user)
   }
 
-  async findById$ (_id: string | ObjectID): Promise<User> {
+  async findById$ (_id: ObjectID): Promise<User> {
     const user = await this.findById(_id)
     if (user === null) {
       throw new UserNotFoundError({ _id })
@@ -49,13 +58,14 @@ export class UserService {
   }
 
   async findByUsername (username: string): Promise<User | null> {
-    const user = await this.userCollection.findOne({ username })
-    return this.wrap(user)
+    const user = await this.collection.findOne({ username })
+    return this.trim(user)
   }
 
   async findByUsername$ (username: string): Promise<User> {
     const user = await this.findByUsername(username)
     if (user === null) {
+
       throw new UserNotFoundError({ username })
     }
 
@@ -63,44 +73,57 @@ export class UserService {
   }
 
   async createUser ({ username, password, verifyPassword }: CreateUserRequest): Promise<User> {
-    const passwordHash = await this.validatePassword(password, verifyPassword)
-    const existingUser = await this.findByUsername(username)
+    username = await this.validateUsername(username)
+    const passwordHash = await this.validateNewPassword(password, verifyPassword)
 
-    if (existingUser !== null) {
-      throw new UserExistsError()
-    }
-
-    const user: IUser = {
+    const user: PrivateUser = {
       username,
       passwordHash,
     }
 
-    const result = await this.userCollection.insertOne(user)
+    const result = await this.collection.insertOne(user)
     if (result.insertedCount < 1) {
       throw new Error(`User ${username} was not inserted correctly!`)
     }
-    user._id = result.insertedId
 
-    return this.wrap$(user)
+    return this.trim$({
+      ...user,
+      _id: result.insertedId,
+    })
   }
 
-  async changePassword (username: string, { password, verifyPassword }: ChangePasswordRequest): Promise<User> {
-    const passwordHash = await this.validatePassword(password, verifyPassword)
+  async changePassword (_id: ObjectID, { password, verifyPassword }: ChangePasswordRequest): Promise<User> {
+    const passwordHash = await this.validateNewPassword(password, verifyPassword)
+    await this.findById$(_id) // verify the user exists
 
-    const result = await this.userCollection.findOneAndUpdate(
-      { username },
+    const result = await this.collection.findOneAndUpdate(
+      { _id },
       { $set: { passwordHash } },
-      { returnOriginal: false },
+      { returnOriginal: false }, // return the updated version, not the original
     )
 
-    return this.wrap$(result.value!)
+    return this.trim$(result.value!)
   }
 
-  async checkPassword (password: string, hash: string): Promise<boolean> {
+  async checkPassword (username: string, password: string): Promise<User> {
+    const user = await this.collection.findOne({ username })
+    if (!user) {
+      throw new LoginError()
+    }
+
+    const passwordsMatch = await this.verifyPassword(password, user.passwordHash)
+    if (!passwordsMatch) {
+      throw new LoginError()
+    }
+
+    return this.trim$(user)
+  }
+
+  private async verifyPassword (password: string, hash: string): Promise<boolean> {
     return compare(password, hash)
   }
 
-  private async validatePassword (password: string, verifyPassword: string): Promise<string> {
+  private async validateNewPassword (password: string, verifyPassword: string): Promise<string> {
     if (password !== verifyPassword) {
       throw new SetPasswordMismatchError()
     }
@@ -113,18 +136,38 @@ export class UserService {
     return hash(password, BCRYPT_SALT_ROUNDS)
   }
 
-  private wrap (user: IUser | null): User | null {
+  private async validateUsername (username: string): Promise<string> {
+    if (username.length < 8) {
+      throw new InputValidationError('Username must be at least 8 characters long')
+    }
+
+    const existingUser = await this.findByUsername(username)
+
+    if (existingUser !== null) {
+      throw new UserExistsError()
+    }
+
+    return username
+  }
+
+  private trim (user: PrivateUser | null): User | null {
     if (!user) {
       return user
     }
 
-    return this.wrap$(user)
+    return this.trim$(user)
   }
 
-  private wrap$ (user: IUser): User {
-    const userObj = new User(user)
-    passwordManager.set(userObj, user.passwordHash)
-    return userObj
+  private trim$ (user: PrivateUser): User {
+    const trimmed: User = {
+      _id: user._id,
+      username: user.username,
+      passwordHash: undefined,
+    }
+
+    delete trimmed.passwordHash
+
+    return trimmed
   }
 
   // private serialize (user: User): IUser {

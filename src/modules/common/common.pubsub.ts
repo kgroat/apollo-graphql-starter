@@ -2,7 +2,7 @@
 import { PubSub } from 'graphql-subscriptions'
 import { BasePubSub } from '../../pubsub'
 
-export interface HeartbeatData {
+interface HeartbeatData {
   healthCheck: boolean
 }
 

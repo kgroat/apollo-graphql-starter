@@ -1,6 +1,5 @@
 
 import { ObjectID } from 'mongodb'
-import { objectIdToString } from '../../helpers/objectId'
 import { BasePubSub } from '../../pubsub'
 
 import { Post } from './post.types'
@@ -24,7 +23,7 @@ export class PostPubSub extends BasePubSub<UpdatePostData> {
     })
   }
 
-  private UPDATE_CODE (postId: string | ObjectID) {
-    return `POST:UPDATE:${objectIdToString(postId)}`
+  private UPDATE_CODE (postId: ObjectID) {
+    return `POST:UPDATE:${postId.toHexString()}`
   }
 }

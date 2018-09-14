@@ -1,14 +1,19 @@
 
 import { GraphQLScalarType } from 'graphql'
 import { Kind } from 'graphql/language'
-import { IResolvers } from 'apollo-server'
 import { ObjectID } from 'mongodb'
+import { IResolvers } from 'apollo-server'
 import gql from '../../helpers/noopTag'
 import { Context } from '../../context'
 
-import { Document } from './document.types'
+import { Document } from './common.types'
 
 export const typeDefs = gql`
+  input PaginationData {
+    skip: Int
+    limit: Int
+  }
+
   scalar ObjectID
 
   interface Document {
@@ -16,10 +21,15 @@ export const typeDefs = gql`
   }
 `
 
+const objectIdDescription = `
+The \`ObjectID\` scalar type represents a [\`BSON\`](https://en.wikipedia.org/wiki/BSON) ID
+commonly used in \`mongodb\`.
+`
+
 export const resolvers: IResolvers<Document, Context> = {
   ObjectID: new GraphQLScalarType({
     name: 'ObjectID',
-    description: 'A BSON id data type',
+    description: objectIdDescription,
     serialize (_id): string {
       if (_id instanceof ObjectID) {
         return _id.toHexString()

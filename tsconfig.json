@@ -14,7 +14,7 @@
     "moduleResolution": "node",
   },
   "include": [
-    "src/**/*"
+    "src/**/*", "__mocks__/mongodb.ts", "__mocks__/jsonwebtoken.ts"
   ],
   "exclude": [
     "node_modules",

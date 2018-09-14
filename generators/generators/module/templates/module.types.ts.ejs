@@ -1,7 +1,6 @@
 
 import { ObjectID } from 'mongodb'
 import { Document } from '../document/document.types'
-import { toObjectId } from '../../helpers/objectId'
 
 export class <%= capitalName %> extends Document {
   content: string
@@ -11,7 +10,7 @@ export class <%= capitalName %> extends Document {
     super(<%= name %>)
 
     this.content = <%= name %>.content!
-    this.posterId = toObjectId(<%= name %>.posterId!)
+    this.posterId = <%= name %>.posterId!
   }
 }
 

@@ -4,7 +4,7 @@ import * as glob from 'glob'
 import { join } from 'path'
 import gql from '../helpers/noopTag'
 
-import { HeartbeatPubSub } from './heartbeat/heartbeat.pubsub'
+import { HeartbeatPubSub } from './common/common.pubsub'
 
 const baseTypeDef = gql`
 type Query {
@@ -28,7 +28,9 @@ const schemaFiles = glob.sync(join(__dirname, './**/*.schema.ts'))
 let gatheredTypeDefs: string[] = [baseTypeDef]
 let gatheredResolvers: IResolvers = {
   Query: {
-    healthCheck: () => true,
+    healthCheck: {
+      resolve: () => true,
+    },
   },
   Subscription: {
     healthCheck: {
@@ -36,7 +38,9 @@ let gatheredResolvers: IResolvers = {
     },
   },
   Mutation: {
-    healthCheck: () => true,
+    healthCheck: {
+      resolve: () => true,
+    },
   },
 }
 

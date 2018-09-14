@@ -1,6 +1,5 @@
 
 import { ObjectID } from 'mongodb'
-import { toObjectId } from '../../helpers/objectId'
 import { getCollection } from '../../db'
 import { User } from '../user/user.types'
 
@@ -27,13 +26,12 @@ export class <%= capitalName %>Service {
     return <%= name %>s.map(this.wrap$)
   }
 
-  async findById (_id: string | ObjectID): Promise<<%= capitalName %> | null> {
-    _id = toObjectId(_id)
+  async findById (_id: ObjectID): Promise<<%= capitalName %> | null> {
     const <%= name %> = await this.<%= name %>Collection.findOne({ _id })
     return this.wrap(<%= name %>)
   }
 
-  async findById$ (_id: string | ObjectID): Promise<<%= capitalName %>> {
+  async findById$ (_id: ObjectID): Promise<<%= capitalName %>> {
     const <%= name %> = await this.findById(_id)
     if (<%= name %> === null) {
       throw new <%= capitalName %>NotFoundError({ _id })

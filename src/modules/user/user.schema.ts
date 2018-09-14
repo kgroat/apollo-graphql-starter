@@ -1,20 +1,24 @@
 
 import { IResolvers } from 'apollo-server'
+import { ObjectID } from 'mongodb'
 import gql from '../../helpers/noopTag'
 import { Context } from '../../context'
+import { PostService } from '../post/post.service'
+import { PaginationRequest } from '../common/common.types'
+import { Post } from '../post/post.types'
 
 import { UserService } from './user.service'
 import { User, CreateUserRequest } from './user.types'
 
 export const typeDefs = gql`
   extend type Query {
-    user(username: String!): User
-    userById(userId: ObjectID!): User
-    users: [User!]!
+    user (username: String!): User
+    userById (userId: ObjectID!): User
+    users (pagination: PaginationData): [User!]!
   }
 
   extend type Mutation {
-    createUser(
+    createUser (
       username: String!,
       password: String!,
       verifyPassword: String!,
@@ -24,26 +28,43 @@ export const typeDefs = gql`
   type User implements Document {
     _id: ObjectID!
     username: String!
+    posts (pagination: PaginationData): [Post!]!
   }
 `
 
-const userService = UserService.instance
-
-export const resolvers: IResolvers<User, Context> = {
+export const userResolvers = {
   Query: {
-    async user (_source, { username }): Promise<User | null> {
-      return userService.findByUsername(username)
+    user: {
+      async resolve (_source: any, { username }: { username: string }): Promise<User | null> {
+        return UserService.instance.findByUsername(username)
+      },
     },
-    async userById (_source, { userId }): Promise<User | null> {
-      return userService.findById(userId)
+    userById: {
+      async resolve (_source: any, { userId }: { userId: ObjectID }): Promise<User | null> {
+        return UserService.instance.findById(userId)
+      },
     },
-    async users (): Promise<User[]> {
-      return userService.findAll()
+    users: {
+      async resolve (_source: any, { pagination }: PaginationRequest): Promise<User[]> {
+        return UserService.instance.findAll(pagination)
+      },
     },
   },
   Mutation: {
-    async createUser (_source, args: CreateUserRequest): Promise<User> {
-      return userService.createUser(args)
+    createUser: {
+      async resolve (_source: any, args: CreateUserRequest): Promise<User> {
+        return UserService.instance.createUser(args)
+      },
+    },
+  },
+  User: {
+    posts: {
+      description: 'All of the posts created by a particular User.',
+      async resolve ({ _id }: User, { pagination }: PaginationRequest): Promise<Post[]> {
+        return PostService.instance.findAllByPoster(_id!, pagination)
+      },
     },
   },
 }
+
+export const resolvers: IResolvers<User, Context> = userResolvers

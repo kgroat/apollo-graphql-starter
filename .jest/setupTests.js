@@ -1,0 +1,2 @@
+
+Symbol.asyncIterator = Symbol('asyncIterator')

@@ -8,6 +8,16 @@ interface Answers {
 
 const MODULE_ROOT = 'src/modules'
 
+const mockTypes = [
+  'pubsub',
+  'service',
+]
+const testTypes = [
+  'pubsub',
+  'schema',
+  'service',
+]
+
 const templateTypes = [
   'errors',
   'pubsub',
@@ -54,6 +64,24 @@ export = class extends Generator {
       this.fs.copyTpl(
         this.templatePath(`module.${type}.ts.ejs`),
         this.destinationPath(path.join(moduleDir, `${this.answers.name}.${type}.ts`)),
+        this.answers,
+      )
+    })
+
+    const mockDir = '__mocks__'
+    mockTypes.forEach(type => {
+      this.fs.copyTpl(
+        this.templatePath(mockDir, `module.${type}.ts.ejs`),
+        this.destinationPath(path.join(moduleDir, mockDir, `${this.answers.name}.${type}.ts`)),
+        this.answers,
+      )
+    })
+
+    const testDir = '__tests__'
+    testTypes.forEach(type => {
+      this.fs.copyTpl(
+        this.templatePath(testDir, `module.${type}.ts.ejs`),
+        this.destinationPath(path.join(moduleDir, testDir, `${this.answers.name}.${type}.ts`)),
         this.answers,
       )
     })

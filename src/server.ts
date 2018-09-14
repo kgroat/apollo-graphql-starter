@@ -19,5 +19,8 @@ const startServer = async () => {
   console.log(`server listening on port ${info.port}`)
 }
 
-/* tslint:disable-next-line:no-floating-promises */
-startServer()
+startServer().catch(err => {
+  console.error('Something went wrong while starting the server:')
+  console.error(err)
+  process.exit(1)
+})

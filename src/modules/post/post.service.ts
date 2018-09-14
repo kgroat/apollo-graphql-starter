@@ -1,31 +1,43 @@
 
 import { ObjectID } from 'mongodb'
-import { toObjectId } from '../../helpers/objectId'
 import { getCollection } from '../../db'
-import { User } from '../user/user.types'
+import { DbService } from '../common/common.service'
+import { PaginationData } from '../common/common.types'
 
 import { PostNotFoundError, CannotEditPostError } from './post.errors'
-import { Post, IPost, CreatePostRequest, UpdatePostRequest } from './post.types'
+import { Post, CreatePostRequest, UpdatePostRequest } from './post.types'
 
-export class PostService {
+export class PostService extends DbService<Post> {
   constructor (
-    private postCollection = getCollection<IPost>('posts'),
-  ) {}
+    collection = getCollection<Post>('posts'),
+  ) {
+    super(collection)
+  }
 
   static instance = new PostService()
 
-  async findAll (): Promise<Post[]> {
-    const posts = await this.postCollection.find().toArray()
-    return posts.map(this.wrap$)
+  async findAll (pagination?: PaginationData): Promise<Post[]> {
+    const posts = await this.paginate(
+      this.collection.find(),
+      pagination,
+    )
+    return posts
   }
 
-  async findById (_id: string | ObjectID): Promise<Post | null> {
-    _id = toObjectId(_id)
-    const post = await this.postCollection.findOne({ _id })
-    return this.wrap(post)
+  async findAllByPoster (posterId: ObjectID, pagination?: PaginationData): Promise<Post[]> {
+    const posts = await this.paginate(
+      this.collection.find({ posterId }),
+      pagination,
+    )
+    return posts
   }
 
-  async findById$ (_id: string | ObjectID): Promise<Post> {
+  async findById (_id: ObjectID): Promise<Post | null> {
+    const post = await this.collection.findOne({ _id })
+    return post
+  }
+
+  async findById$ (_id: ObjectID): Promise<Post> {
     const post = await this.findById(_id)
     if (post === null) {
       throw new PostNotFoundError({ _id })
@@ -34,45 +46,35 @@ export class PostService {
     return post
   }
 
-  async createPost (user: User, { content }: CreatePostRequest): Promise<Post> {
-    const post: IPost = {
+  async createPost (posterId: ObjectID, { content }: CreatePostRequest): Promise<Post> {
+    const post: Post = {
       content,
-      posterId: user._id!,
+      posterId,
     }
 
-    const result = await this.postCollection.insertOne(post)
+    const result = await this.collection.insertOne(post)
     if (result.insertedCount < 1) {
       throw new Error(`Post was not created correctly!`)
     }
-    post._id = result.insertedId
 
-    return this.wrap$(post)
+    return {
+      ...post,
+      _id: result.insertedId,
+    }
   }
 
-  async updatePost (user: User, { postId, data }: UpdatePostRequest): Promise<Post> {
+  async updatePost (posterId: ObjectID, { postId, data }: UpdatePostRequest): Promise<Post> {
     const existingPost = await this.findById$(postId)
-    if (!existingPost.posterId.equals(user._id!)) {
+    if (!existingPost.posterId.equals(posterId)) {
       throw new CannotEditPostError()
     }
 
-    const result = await this.postCollection.findOneAndUpdate(
-      { _id: postId, posterId: user._id },
+    const result = await this.collection.findOneAndUpdate(
+      { _id: postId, posterId },
       { $set: data },
       { returnOriginal: false },
     )
 
-    return this.wrap$(result.value!)
-  }
-
-  private wrap (post: IPost | null): Post | null {
-    if (!post) {
-      return post
-    }
-
-    return this.wrap$(post)
-  }
-
-  private wrap$ (post: IPost): Post {
-    return new Post(post)
+    return result.value!
   }
 }

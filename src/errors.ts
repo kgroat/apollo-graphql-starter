@@ -11,3 +11,9 @@ export class DbNotFoundError<T> extends UserInputError {
     super(message, query)
   }
 }
+
+export class InputValidationError extends UserInputError {
+  constructor (message: string) {
+    super(message)
+  }
+}

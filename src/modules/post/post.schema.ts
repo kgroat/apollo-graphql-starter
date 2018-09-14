@@ -1,10 +1,12 @@
 
+import { ObjectID } from 'mongodb'
 import { IResolvers } from 'apollo-server'
 import { authorize } from '../../helpers/authorize'
 import gql from '../../helpers/noopTag'
 import { Context } from '../../context'
 import { User } from '../user/user.types'
 import { UserService } from '../user/user.service'
+import { PaginationRequest } from '../common/common.types'
 
 import { PostService } from './post.service'
 import { PostPubSub } from './post.pubsub'
@@ -12,7 +14,7 @@ import { Post, CreatePostRequest, UpdatePostRequest } from './post.types'
 
 export const typeDefs = gql`
   extend type Query {
-    posts: [Post!]!
+    posts (pagination: PaginationData): [Post!]!
     post (postId: ObjectID!): Post!
   }
 
@@ -36,39 +38,52 @@ export const typeDefs = gql`
   }
 `
 
-export const resolvers: IResolvers<Post, Context> = {
+export const postResolvers = {
   Query: {
-    async posts (): Promise<Post[]> {
-      const posts = await PostService.instance.findAll()
-      return posts
+    posts: {
+      description: 'Used to retrieve all posts.',
+      async resolve (_source: any, { pagination }: PaginationRequest): Promise<Post[]> {
+        const posts = await PostService.instance.findAll(pagination)
+        return posts
+      },
     },
-    async post (_source, { postId }): Promise<Post | null> {
-      return PostService.instance.findById(postId)
+    post: {
+      async resolve (_source: any, { postId }: { postId: ObjectID }): Promise<Post | null> {
+        return PostService.instance.findById(postId)
+      },
     },
   },
   Mutation: {
-    async createPost (_source, args: CreatePostRequest, ctx): Promise<Post> {
-      const user = await authorize(ctx)
-      return PostService.instance.createPost(user, args)
+    createPost: {
+      async resolve (_source: any, args: CreatePostRequest, ctx: Context): Promise<Post> {
+        const user = await authorize(ctx)
+        return PostService.instance.createPost(user._id!, args)
+      },
     },
-    async updatePost (_source, args: UpdatePostRequest, ctx): Promise<Post> {
-      const user = await authorize(ctx)
-      const post = await PostService.instance.updatePost(user, args)
-      PostPubSub.instance.publishUpdate(post)
-      return post
+    updatePost: {
+      async resolve (_source: any, args: UpdatePostRequest, ctx: Context): Promise<Post> {
+        const user = await authorize(ctx)
+        const post = await PostService.instance.updatePost(user._id!, args)
+        PostPubSub.instance.publishUpdate(post)
+        return post
+      },
     },
   },
   Subscription: {
     post: {
-      async subscribe (_source, { postId }) {
+      async subscribe (_source: any, { postId }: { postId: ObjectID }): Promise<AsyncIterator<Post>> {
         const post = await PostService.instance.findById$(postId)
         return PostPubSub.instance.listenForUpdates(post)
       },
     },
   },
   Post: {
-    async poster (source): Promise<User> {
-      return UserService.instance.findById$(source.posterId)
+    poster: {
+      async resolve (source: Post): Promise<User> {
+        return UserService.instance.findById$(source.posterId)
+      },
     },
   },
 }
+
+export const resolvers: IResolvers<Post, Context> = postResolvers

@@ -12,8 +12,9 @@ export let dbPromise = connect(MONGO_URI, { useNewUrlParser: true }).then(client
   db = client.db()
   return db
 })
-/* tslint:disable-next-line:no-floating-promises */
-dbPromise.then(() => console.log('connected to mongodb!'))
+dbPromise.then(db => {
+  console.log('connected to mongodb database:', db.databaseName)
+}).catch()
 
 export function getCollection<T> (collectionName: string): Collection<T> {
   return db.collection<T>(collectionName)

@@ -1,6 +1,4 @@
 
-import { config as configPasswordTest, tests as passwordTests } from 'owasp-password-strength-test'
-
 declare namespace config {
   export type Env = 'local' | 'development' | 'staging' | 'production'
 
@@ -49,15 +47,6 @@ if (config.NODE_ENV === 'staging' || config.NODE_ENV === 'production') {
   if (unsetKeys.length > 0) {
     throw new Error(`In ${config.NODE_ENV} mode, all configuration environment variables must be set! Unset: [$${unsetKeys.join(', $')}]`)
   }
-} else {
-  configPasswordTest({
-    allowPassphrases: true,
-    minLength: 0,
-    minPhraseLength: 0,
-    minOptionalTestsToPass: 0,
-  })
-  passwordTests.optional = []
-  passwordTests.required = []
 }
 
 export = config
