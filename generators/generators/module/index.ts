@@ -58,8 +58,15 @@ export = class extends Generator {
   }
 
   generateModule () {
+    this.log('generating files...')
     const moduleDir = path.join(MODULE_ROOT, this.answers.name)
 
+    this._generateFiles(moduleDir)
+    this._generateMocks(moduleDir)
+    this._generateTests(moduleDir)
+  }
+
+  private _generateFiles (moduleDir: string) {
     templateTypes.forEach(type => {
       this.fs.copyTpl(
         this.templatePath(`module.${type}.ts.ejs`),
@@ -67,7 +74,9 @@ export = class extends Generator {
         this.answers,
       )
     })
+  }
 
+  private _generateMocks (moduleDir: string) {
     const mockDir = '__mocks__'
     mockTypes.forEach(type => {
       this.fs.copyTpl(
@@ -76,7 +85,9 @@ export = class extends Generator {
         this.answers,
       )
     })
+  }
 
+  private _generateTests (moduleDir: string) {
     const testDir = '__tests__'
     testTypes.forEach(type => {
       this.fs.copyTpl(
