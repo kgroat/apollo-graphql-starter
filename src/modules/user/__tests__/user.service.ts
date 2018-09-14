@@ -44,12 +44,11 @@ describe('UserService', () => {
 
   describe('findAll', () => {
     // tslint:disable-next-line
-    const find = collection.find as jest.Mock
+    let find = collection.find as jest.Mock
 
     beforeEach(() => {
       // clear mocked resolve values
-      find()
-      find.mockClear()
+      find = collection.find = jest.fn()
     })
 
     it('should call this.collection.find once', async () => {
@@ -85,12 +84,11 @@ describe('UserService', () => {
   })
 
   describe('findById', () => {
-    const findOne = collection.findOne as jest.Mock
+    let findOne = collection.findOne as jest.Mock
 
     beforeEach(() => {
       // clear mocked resolve values
-      findOne()
-      findOne.mockClear()
+      findOne = collection.findOne = jest.fn(() => Promise.resolve(null))
     })
 
     it('should call this.collection.findOne once with supplied _id', async () => {
@@ -137,12 +135,11 @@ describe('UserService', () => {
   })
 
   describe('findById$', () => {
-    const findOne = collection.findOne as jest.Mock
+    let findOne = collection.findOne as jest.Mock
 
     beforeEach(() => {
       // clear mocked resolve values
-      findOne()
-      findOne.mockClear()
+      findOne = collection.findOne = jest.fn(() => Promise.resolve(null))
     })
 
     it('should call this.collection.findOne once with supplied _id', async () => {
@@ -178,12 +175,11 @@ describe('UserService', () => {
   })
 
   describe('findByUsername', () => {
-    const findOne = collection.findOne as jest.Mock
+    let findOne = collection.findOne as jest.Mock
 
     beforeEach(() => {
       // clear mocked resolve values
-      findOne()
-      findOne.mockClear()
+      findOne = collection.findOne = jest.fn(() => Promise.resolve(null))
     })
 
     it('should call this.collection.findOne once with supplied _id', async () => {
@@ -218,7 +214,12 @@ describe('UserService', () => {
   })
 
   describe('findByUsername$', () => {
-    const findOne = collection.findOne as jest.Mock
+    let findOne = collection.findOne as jest.Mock
+
+    beforeEach(() => {
+      // clear mocked resolve values
+      findOne = collection.findOne = jest.fn(() => Promise.resolve(null))
+    })
 
     it('should call this.collection.findOne once with supplied _id', async () => {
       const username = 'guy'
@@ -251,15 +252,13 @@ describe('UserService', () => {
   })
 
   describe('createUser', () => {
-    const findOne = collection.findOne as jest.Mock
-    const insertOne = collection.insertOne as jest.Mock
+    let findOne = collection.findOne as jest.Mock
+    let insertOne = collection.insertOne as jest.Mock
 
     beforeEach(() => {
       // clear mocked resolve values
-      findOne()
-      insertOne()
-      findOne.mockClear()
-      insertOne.mockClear()
+      findOne = collection.findOne = jest.fn(() => Promise.resolve(null))
+      insertOne = collection.insertOne = jest.fn(() => Promise.resolve({ insertedCount: 1, value: {} }))
     })
 
     it('should throw an InputValidationError if the username is too short', async () => {
@@ -361,15 +360,13 @@ describe('UserService', () => {
   })
 
   describe('changePassword', () => {
-    const findOne = collection.findOne as jest.Mock
-    const findOneAndUpdate = collection.findOneAndUpdate as jest.Mock
+    let findOne = collection.findOne as jest.Mock
+    let findOneAndUpdate = collection.findOneAndUpdate as jest.Mock
 
     beforeEach(() => {
       // clear mocked resolve values
-      findOne()
-      findOneAndUpdate()
-      findOne.mockClear()
-      findOneAndUpdate.mockClear()
+      findOne = collection.findOne = jest.fn(() => Promise.resolve(null))
+      findOneAndUpdate = collection.findOneAndUpdate = jest.fn(() => Promise.resolve({ updatedCount: 1, value: {} }))
     })
 
     it('should throw a SetPasswordMismatchError if the passwords do not match', async () => {
@@ -426,6 +423,7 @@ describe('UserService', () => {
     it('should call this.collection.findOneAndUpdate once', async () => {
       const _id = new ObjectID()
       const passwordHash = 'my hash'
+      findOne.mockResolvedValueOnce({})
       ;(hash as jest.Mock).mockResolvedValueOnce(passwordHash)
 
       await UserService.instance.changePassword(
