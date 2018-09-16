@@ -13,7 +13,7 @@ import { User, CreateUserRequest } from './user.types'
 export const typeDefs = gql`
   extend type Query {
     user (username: String!): User
-    userById (userId: ObjectID!): User
+    userById (userId: ID!): User
     users (pagination: PaginationData): [User!]!
   }
 
@@ -26,7 +26,7 @@ export const typeDefs = gql`
   }
 
   type User implements Document {
-    _id: ObjectID!
+    _id: ID!
     username: String!
     posts (pagination: PaginationData): [Post!]!
   }

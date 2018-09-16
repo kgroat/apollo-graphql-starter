@@ -2,9 +2,11 @@
 import { ObjectID } from 'mongodb'
 import { UserService } from '../../user/user.service'
 import { AuthService } from '../auth.service'
+import { authorize } from '../../../helpers/authorize'
 
 import { authResolvers } from '../auth.schema'
 
+jest.mock('../../../helpers/authorize')
 jest.mock('../auth.service')
 jest.mock('../../user/user.service')
 
@@ -12,6 +14,35 @@ describe('auth schema resolvers', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
+
+  describe('Query', () => {
+    describe('me', () => {
+      it('should call authorize once', async () => {
+        const context = {
+          authPayload: {
+            _id: new ObjectID(),
+          },
+        }
+
+        await authResolvers.Query.me.resolve({}, {} , context)
+
+        expect(authorize).toHaveBeenCalledTimes(1)
+        expect(authorize).toHaveBeenCalledWith(context)
+      })
+
+      it('should return the result of authorize', async () => {
+        const user = {
+          some: 'user',
+        }
+        ;(authorize as jest.Mock).mockResolvedValue(user)
+
+        const result = await authResolvers.Query.me.resolve({}, {} , {})
+
+        expect(result).toBe(user)
+      })
+    })
+  })
+
   describe('Mutation', () => {
     describe('login', () => {
       it('should call UserService:checkPassword once', async () => {

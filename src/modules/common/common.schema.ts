@@ -14,10 +14,10 @@ export const typeDefs = gql`
     limit: Int
   }
 
-  scalar ObjectID
+  scalar ID
 
   interface Document {
-    _id: ObjectID!
+    _id: ID!
   }
 `
 
@@ -27,8 +27,8 @@ commonly used in \`mongodb\`.
 `
 
 export const resolvers: IResolvers<Document, Context> = {
-  ObjectID: new GraphQLScalarType({
-    name: 'ObjectID',
+  ID: new GraphQLScalarType({
+    name: 'ID',
     description: objectIdDescription,
     serialize (_id): string {
       if (_id instanceof ObjectID) {

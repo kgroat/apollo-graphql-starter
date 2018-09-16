@@ -15,16 +15,16 @@ import { Post, CreatePostRequest, UpdatePostRequest } from './post.types'
 export const typeDefs = gql`
   extend type Query {
     posts (pagination: PaginationData): [Post!]!
-    post (postId: ObjectID!): Post!
+    post (postId: ID!): Post!
   }
 
   extend type Mutation {
     createPost (content: String!): Post!
-    updatePost (postId: ObjectID!, data: UpdatePost!): Post!
+    updatePost (postId: ID!, data: UpdatePost!): Post!
   }
 
   extend type Subscription {
-    post (postId: ObjectID!): Post!
+    post (postId: ID!): Post!
   }
 
   input UpdatePost {
@@ -32,7 +32,7 @@ export const typeDefs = gql`
   }
 
   type Post implements Document {
-    _id: ObjectID!
+    _id: ID!
     content: String!
     poster: User!
   }
