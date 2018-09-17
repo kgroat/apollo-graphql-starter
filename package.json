@@ -39,7 +39,6 @@
     "yo": "^2.0.5"
   },
   "devDependencies": {
-    "@playlyfe/gql": "^2.6.0",
     "@types/node": "^10.9.4",
     "@types/yeoman-generator": "^2.0.3",
     "generator-graphql": "file:generators",
